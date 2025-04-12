@@ -8,7 +8,7 @@ from aiogram.types import ParseMode
 from PIL import Image
 from io import BytesIO
 
-API_TOKEN = '7574290945:AAFWuPAX0IGt9CN5Gz6evxJbW-B_crRuyjg'
+BOT_TOKEN = '8099616066:AAFMZ8ZzO1D3cEUwjwe5umyt4l3BzpmWlL0'
 
 url = "https://deepseek-all-in-one.p.rapidapi.com/reasoner"
 headers = {
@@ -19,7 +19,7 @@ headers = {
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 
 async def get_response_from_deepseek(user_message: str):
