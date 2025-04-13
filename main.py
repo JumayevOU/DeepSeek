@@ -3,7 +3,8 @@ import asyncio
 import aiohttp
 import pytesseract
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, ParseMode
+from aiogram.types import Message
+from aiogram.utils.markdown import ParseMode  
 from aiogram.utils import executor
 from PIL import Image
 from io import BytesIO
@@ -32,13 +33,13 @@ async def get_response_from_deepseek(user_message: str):
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as response:
                     if response.status == 429:
-                        logging.warning("429: Too many requests. Waiting...")
+                        logging.warning("429: Juda ko‘p so‘rovlar. Kutish...")
                         await asyncio.sleep(10)
                         continue
                     response.raise_for_status()
                     return await response.json()
         except Exception as e:
-            logging.error(f"Error: {e}")
+            logging.error(f"Xatolik: {e}")
             return None
     return None
 
@@ -68,7 +69,7 @@ async def handle_photo(message: Message):
             return
         await message.reply("📝 Rasmda aniqlangan matn:\n" + text)
 
-        # Call DeepSeek API
+
         response_data = await get_response_from_deepseek(text)
         if response_data and "choices" in response_data:
             answer = response_data["choices"][0]["message"]["content"]
@@ -76,7 +77,7 @@ async def handle_photo(message: Message):
         else:
             await message.reply("AI javob bera olmadi. Keyinroq urinib ko‘ring.")
     except Exception as e:
-        logging.error(f"Error reading image: {e}")
+        logging.error(f"Rasmni o‘qishda xatolik: {e}")
         await message.reply("❌ Rasmni o‘qishda xatolik yuz berdi.")
 
 @dp.message(F.text)
