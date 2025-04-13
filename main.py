@@ -4,12 +4,13 @@ import aiohttp
 import pytesseract
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
-from aiogram.utils.markdown import ParseMode  
-from aiogram.utils import executor
+from aiogram.enums import ParseMode
+from aiogram.filters import Command
+from aiogram.client.default import DefaultBotProperties
 from PIL import Image
 from io import BytesIO
 
-BOT_TOKEN = '8099616066:AAFMZ8ZzO1D3cEUwjwe5umyt4l3BzpmWlL0'
+API_TOKEN = '8099616066:AAFMZ8ZzO1D3cEUwjwe5umyt4l3BzpmWlL0'
 
 url = "https://deepseek-all-in-one.p.rapidapi.com/reasoner"
 headers = {
@@ -20,21 +21,23 @@ headers = {
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=BOT_TOKEN)
+# 3.x versiyada default parse_mode aniqlash shart
+bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
+# DeepSeek API'dan javob olish funksiyasi
 async def get_response_from_deepseek(user_message: str):
     payload = {
         "messages": [{"role": "user", "content": user_message}]
     }
 
-    for _ in range(5):  
+    for _ in range(5):  # 5 marta sinash
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as response:
                     if response.status == 429:
-                        logging.warning("429: Juda ko‘p so‘rovlar. Kutish...")
-                        await asyncio.sleep(10)
+                        logging.warning("429: Too many requests. Waiting...")
+                        await asyncio.sleep(10)  # 10 soniya kutish
                         continue
                     response.raise_for_status()
                     return await response.json()
@@ -43,7 +46,8 @@ async def get_response_from_deepseek(user_message: str):
             return None
     return None
 
-@dp.message(F.command("start"))
+# /start komandasi uchun handler
+@dp.message(Command("start"))
 async def start_handler(message: Message):
     info_text = (
         "👋 <b>Keling tanishib olaylik!</b>\n\n"
@@ -53,8 +57,9 @@ async def start_handler(message: Message):
         "➤ Har qanday mavzuda izoh, yechim yoki maslahat bera olaman\n\n"
         "✍️ Savolingizni yozing yoki rasm yuboring. Boshladikmi?"
     )
-    await message.answer(info_text, parse_mode=ParseMode.HTML)
+    await message.answer(info_text)
 
+# Rasmli xabarlar uchun handler
 @dp.message(F.photo)
 async def handle_photo(message: Message):
     photo = message.photo[-1]
@@ -69,7 +74,6 @@ async def handle_photo(message: Message):
             return
         await message.reply("📝 Rasmda aniqlangan matn:\n" + text)
 
-
         response_data = await get_response_from_deepseek(text)
         if response_data and "choices" in response_data:
             answer = response_data["choices"][0]["message"]["content"]
@@ -77,9 +81,10 @@ async def handle_photo(message: Message):
         else:
             await message.reply("AI javob bera olmadi. Keyinroq urinib ko‘ring.")
     except Exception as e:
-        logging.error(f"Rasmni o‘qishda xatolik: {e}")
+        logging.error(e)
         await message.reply("❌ Rasmni o‘qishda xatolik yuz berdi.")
 
+# Matnli xabarlar uchun handler
 @dp.message(F.text)
 async def handle_text(message: Message):
     user_message = message.text
@@ -91,6 +96,9 @@ async def handle_text(message: Message):
     else:
         await message.reply("🤖 Afsuski, javob bera olmadim. Keyinroq urinib ko‘ring.")
 
+# Pollingni boshlash
+async def main():
+    await dp.start_polling(bot)
+
 if __name__ == '__main__':
-    from aiogram import executor
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
