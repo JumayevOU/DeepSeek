@@ -2,9 +2,9 @@ import logging
 import asyncio
 import aiohttp
 import pytesseract
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import Message, ParseMode
 from aiogram.utils import executor
-from aiogram.types import ParseMode
 from PIL import Image
 from io import BytesIO
 
@@ -20,7 +20,7 @@ headers = {
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 
 async def get_response_from_deepseek(user_message: str):
     payload = {
@@ -42,8 +42,8 @@ async def get_response_from_deepseek(user_message: str):
             return None
     return None
 
-@dp.message_handler(commands=['start'])
-async def start_handler(message: types.Message):
+@dp.message(F.command("start"))
+async def start_handler(message: Message):
     info_text = (
         "👋 <b>Keling tanishib olaylik!</b>\n\n"
         "🤖 Men sizning AI yordamchingizman. Quyidagilarni qila olaman:\n"
@@ -54,8 +54,8 @@ async def start_handler(message: types.Message):
     )
     await message.answer(info_text, parse_mode=ParseMode.HTML)
 
-@dp.message_handler(content_types=types.ContentType.PHOTO)
-async def handle_photo(message: types.Message):
+@dp.message(F.photo)
+async def handle_photo(message: Message):
     photo = message.photo[-1]
     photo_file = await photo.download(destination=BytesIO())
     photo_file.seek(0)
@@ -79,8 +79,8 @@ async def handle_photo(message: types.Message):
         logging.error(f"Error reading image: {e}")
         await message.reply("❌ Rasmni o‘qishda xatolik yuz berdi.")
 
-@dp.message_handler(content_types=types.ContentType.TEXT)
-async def handle_text(message: types.Message):
+@dp.message(F.text)
+async def handle_text(message: Message):
     user_message = message.text
     response_data = await get_response_from_deepseek(user_message)
 
@@ -91,4 +91,5 @@ async def handle_text(message: types.Message):
         await message.reply("🤖 Afsuski, javob bera olmadim. Keyinroq urinib ko‘ring.")
 
 if __name__ == '__main__':
+    from aiogram import executor
     executor.start_polling(dp, skip_updates=True)
