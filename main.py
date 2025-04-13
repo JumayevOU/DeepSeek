@@ -38,7 +38,7 @@ async def get_response_from_deepseek(user_message: str):
                     response.raise_for_status()
                     return await response.json()
         except Exception as e:
-            logging.error(f"Xatolik: {e}")
+            logging.error(f"Error: {e}")
             return None
     return None
 
@@ -68,7 +68,7 @@ async def handle_photo(message: types.Message):
             return
         await message.reply("📝 Rasmda aniqlangan matn:\n" + text)
 
-      
+        # Call DeepSeek API
         response_data = await get_response_from_deepseek(text)
         if response_data and "choices" in response_data:
             answer = response_data["choices"][0]["message"]["content"]
@@ -76,7 +76,7 @@ async def handle_photo(message: types.Message):
         else:
             await message.reply("AI javob bera olmadi. Keyinroq urinib ko‘ring.")
     except Exception as e:
-        logging.error(e)
+        logging.error(f"Error reading image: {e}")
         await message.reply("❌ Rasmni o‘qishda xatolik yuz berdi.")
 
 @dp.message_handler(content_types=types.ContentType.TEXT)
