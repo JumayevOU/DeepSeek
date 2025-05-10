@@ -1,4 +1,2 @@
-aiogram
-aiohttp
-pytesseract
-Pillow
+aiogram==3.19.0
+requests
