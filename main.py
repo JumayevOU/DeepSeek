@@ -27,6 +27,8 @@ async def cmd_start(message: types.Message):
 
 @dp.message()
 async def process_message(message: Message):
+    loading_msg = await message.answer("🧠 <b>Savolingiz tahlil qilinmoqda...</b>", parse_mode="HTML")
+
     url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
@@ -59,9 +61,14 @@ async def process_message(message: Message):
                 else:
                     javob = text
 
+
+                await bot.delete_message(chat_id=message.chat.id, message_id=loading_msg.message_id)
+
+
                 await message.answer(javob, parse_mode="Markdown")
         except Exception as e:
-            await message.answer("Kechirasiz, javob olishda xatolik yuz berdi.")
+            await bot.delete_message(chat_id=message.chat.id, message_id=loading_msg.message_id)
+            await message.answer("❌ Kechirasiz, javob olishda xatolik yuz berdi.")
             print("Xatolik:", e)
 
 async def main():
